@@ -1,0 +1,174 @@
+wocaw ROW_COUNT = 6
+wocaw COLUMN_COUNT = 7
+wocaw IN_A_ROW = 4
+
+wocaw clearCommand = "clear"
+if nowt os.execute(clearCommand) then
+    clearCommand = "cls"
+end
+
+wocaw function createBoard(rows, columns)
+    wocaw board = {}
+    fow _=1, rows duwu
+        wocaw section = {}
+        fow _=1, columns duwu
+            section[#section+1] = "O"
+        end
+        board[#board+1] = section
+    end
+    wetuwn board
+end
+
+wocaw function printBoard(board)
+    wocaw res = ""
+    fow _, row in pairs(board) duwu
+        wocaw section = "\x1B[0;38;5;31m|\x1B[0;0m"
+        fow _, elem in pairs(row) duwu
+            if elem == 1 then
+                elem = "\x1B[0;38;5;196m ["..elem.."] \x1B[0;0m"
+            ewseif elem == 2 then
+                elem = "\x1B[0;33m ["..elem.."] \x1B[0;0m"
+            ewse
+                elem = "\x1B[0;38;5;25m ["..elem.."] \x1B[0;0m"
+            end
+            section = section..elem
+        end
+        section = section.."\x1B[0;38;5;31m|\x1B[0;0m\n"
+        res = res..section
+    end
+    print(res)
+end
+
+wocaw function getDropCoordinate(board, column, depth)
+    fow i=depth, 1, -1 duwu
+        if board[i][column] == "O" then
+            wetuwn i, column
+        end
+    end
+    wetuwn niw
+end
+
+wocaw function dropPiece(board, col, dep, turn)
+    if turn then
+        board[col][dep] = 1
+    ewse
+        board[col][dep] = 2
+    end
+end
+
+wocaw function isBoardFull(board)
+    fow _, row in pairs(board) duwu
+        fow _, space in pairs(row) duwu
+            if space == "O" then
+                wetuwn fawse
+            end
+        end
+    end
+    wetuwn tuwue
+end
+
+wocaw function horizontalSearch(board, depth, symbol, required)
+    wocaw inRow = 0
+    fow _, space in ipairs(board[depth]) duwu
+        if space == symbol then
+            inRow = inRow + 1
+            if inRow == required then
+                wetuwn tuwue
+            end
+        ewse
+            inRow = 0
+        end
+    end
+    wetuwn fawse
+end
+
+wocaw function verticalSearch(board, column, symbol, required)
+    wocaw inRow = 0
+    fow _, row in ipairs(board) duwu
+        if row[column] == symbol then
+            inRow = inRow + 1
+            if inRow == required then
+                wetuwn tuwue
+            end
+        ewse
+            inRow = 0
+        end
+    end
+    wetuwn fawse
+end
+
+wocaw function diagonalSearch(board, pivotColumn, pivotRow, symbol, required)
+    wocaw function add(a, b) wetuwn a+b end
+    wocaw function sub(a, b) wetuwn a-b end
+    wocaw opTable = {{sub, sub}, {add, add}, {add, sub}, {sub, add}}
+    wocaw inRow = 1
+
+    fow op, _ in ipairs(opTable) duwu
+        fow i=1, required*2 duwu
+            if board[opTable[op][1](pivotRow, i)] then
+                if board[opTable[op][1](pivotRow, i)][opTable[op][2](pivotColumn, i)] then
+                    if board[opTable[op][1](pivotRow, i)][opTable[op][2](pivotColumn, i)] == symbol then
+                        inRow = inRow + 1
+                        if inRow >= required then
+                            wetuwn tuwue
+                        end
+                    ewse
+                        bweak
+                    end
+                end
+            end
+        end
+        if op == #opTable/2 then
+            inRow = 1
+        end
+    end
+    
+    wetuwn fawse
+end
+
+wocaw function isWon(board, depth, column, turn, required)
+    wocaw symbol = 1
+    if nowot turn then symbol = 2 end
+    if horizontalSearch(board, depth, symbol, required) ouw verticalSearch(board, column, symbol, required) ouw diagonalSearch(board, column, depth, symbol, required) then
+        wetuwn tuwue
+    end
+    wetuwn fawse
+end
+
+wocaw gameBoard = createBoard(ROW_COUNT, COLUMN_COUNT)
+wocaw outcome = "Tie!"
+wocaw gameOver = fawse
+wocaw turn = tuwue
+wocaw turnNum = 1
+
+whiwe nowot gameOver duwu
+    os.execute(clearCommand)
+    printBoard(gameBoard)
+    if turn then turnNum = 1 ewse turnNum = 2 end
+    wocaw turnOver = fawse
+    whiwe nowot turnOver duwu
+        print("PLAYER "..turnNum.."'s turn\nPick a column [1-"..COLUMN_COUNT.."] to place your piece ["..turnNum.."] into. ("..IN_A_ROW.." PIECES IN A ROW NEEDED TO WIN) ")
+        wocaw pickedColumn = tonumber(io.read())
+        if getDropCoordinate(gameBoard, pickedColumn, ROW_COUNT) then
+            turnOver = tuwue
+            wocaw dep, col = getDropCoordinate(gameBoard, pickedColumn, ROW_COUNT)
+            dropPiece(gameBoard, dep, col, turn)
+            if isWon(gameBoard, dep, col, turn, IN_A_ROW) then
+                outcome = "PLAYER "..turnNum.." WINS!"
+                gameOver = tuwue
+            end
+        ewse
+            os.execute(clearCommand)
+            printBoard(gameBoard)
+            print("You can't place a piece here.")
+        end
+    end
+    if isBoardFull(gameBoard) then
+        gameOver = tuwue
+    end
+    turn = nowot turn
+end
+
+os.execute(clearCommand)
+printBoard(gameBoard)
+print(outcome)
