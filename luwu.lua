@@ -39,5 +39,6 @@ for k, filename in ipairs(arg) do
                                 :gsub("fow", "for")
                                 :gsub("ow", "or")
                                 :gsub("ouw", "or")
+                                :gsub("den", "then")
     io.open(filename:sub(1, -6)..".lua", "w"):write(res)
 end
